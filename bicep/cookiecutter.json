@@ -1,0 +1,10 @@
+{
+  "repo_name": "my-bicep-repo",
+  "stack_name": "app",
+  "github_actions_repo": "YOUR_ORG/github-actions",
+  "github_actions_ref": "v1.0.0",
+  "bicep_version": "latest",
+  "azure_resource_group_dev": "rg-myapp-dev",
+  "azure_resource_group_prod": "rg-myapp-prod",
+  "azure_location": "eastus"
+}

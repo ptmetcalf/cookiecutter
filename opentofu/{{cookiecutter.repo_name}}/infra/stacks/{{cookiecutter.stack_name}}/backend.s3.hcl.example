@@ -1,0 +1,13 @@
+# AWS S3 Backend Configuration
+# Copy this file to backend.hcl and update with your values
+# Usage: tofu init -backend-config=backend.hcl
+
+bucket         = "my-terraform-state-bucket"
+key            = "{{cookiecutter.stack_name}}/dev.tfstate"
+region         = "us-east-1"
+encrypt        = true
+dynamodb_table = "terraform-state-lock"
+
+# For CI/CD with OIDC (recommended)
+# use_oidc = true
+# role_arn = "arn:aws:iam::123456789012:role/TerraformRole"

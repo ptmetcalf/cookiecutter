@@ -1,0 +1,5 @@
+stack_name: "{{cookiecutter.stack_name}}"
+stack_dir: "infra/stacks/{{cookiecutter.stack_name}}"
+environments:
+  - dev
+  - prod

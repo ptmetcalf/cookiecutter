@@ -1,0 +1,71 @@
+# Pre-commit hooks for Azure Bicep
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+
+  # Bicep linting and building
+  - repo: local
+    hooks:
+      - id: bicep-lint
+        name: Lint Bicep files
+        entry: bash -c 'for file in "$@"; do az bicep lint --file "$file" || exit 1; done' --
+        language: system
+        files: \.bicep$
+        pass_filenames: true
+
+      - id: bicep-build
+        name: Build Bicep files
+        entry: bash -c 'for file in "$@"; do az bicep build --file "$file" || exit 1; done' --
+        language: system
+        files: \.bicep$
+        pass_filenames: true
+
+  # PSRule for Azure
+  - repo: local
+    hooks:
+      - id: psrule-azure
+        name: Run PSRule for Azure
+        entry: bash -c 'pwsh -Command "Install-Module -Name PSRule.Rules.Azure -Force -Scope CurrentUser; Assert-PSRule -Module PSRule.Rules.Azure -InputPath . -Format File"'
+        language: system
+        files: \.bicep$
+        pass_filenames: false
+
+  # Checkov for Bicep
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.1.65
+    hooks:
+      - id: checkov
+        name: Run Checkov on Bicep
+        args:
+          - --framework=bicep
+          - --quiet
+          - --soft-fail
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint]
+
+  # Markdown linting
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
+    hooks:
+      - id: markdownlint
+        args: [--style, .markdownlint.yml]

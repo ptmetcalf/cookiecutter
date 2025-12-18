@@ -1,0 +1,7 @@
+{
+  "repo_name": "my-iac-repo",
+  "stack_name": "app",
+  "github_actions_repo": "YOUR_ORG/github-actions",
+  "github_actions_ref": "v1.0.0",
+  "tofu_version": "latest"
+}

@@ -1,0 +1,50 @@
+name: Bicep IaC
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - "env/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  pre-commit:
+    if: github.event_name == 'pull_request'
+    uses: {{cookiecutter.github_actions_repo}}/.github/workflows/pre-commit-check.yml@{{cookiecutter.github_actions_ref}}
+
+  whatif:
+    if: github.event_name == 'pull_request'
+    needs: pre-commit
+    uses: {{cookiecutter.github_actions_repo}}/.github/workflows/bicep-whatif.yml@{{cookiecutter.github_actions_ref}}
+    with:
+      environment: dev
+      bicep_file: infra/bicep/main.bicep
+      parameters_file: env/dev.bicepparam
+      deployment_scope: resourceGroup
+      resource_group_name: {{cookiecutter.azure_resource_group_dev}}
+      bicep_version: {{cookiecutter.bicep_version}}
+      pr_comment: true
+      enable_security_scan: true
+    secrets: inherit
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    uses: {{cookiecutter.github_actions_repo}}/.github/workflows/bicep-deploy.yml@{{cookiecutter.github_actions_ref}}
+    with:
+      environment: ${{ inputs.environment }}
+      bicep_file: infra/bicep/main.bicep
+      parameters_file: env/${{ inputs.environment }}.bicepparam
+      deployment_scope: resourceGroup
+      resource_group_name: ${{ inputs.environment == 'prod' && '{{cookiecutter.azure_resource_group_prod}}' || '{{cookiecutter.azure_resource_group_dev}}' }}
+      bicep_version: {{cookiecutter.bicep_version}}
+      confirm_what_if: true
+    secrets: inherit

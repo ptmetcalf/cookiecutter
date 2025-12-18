@@ -1,0 +1,6 @@
+stack_name: "{{cookiecutter.stack_name}}"
+bicep_file: "infra/bicep/main.bicep"
+deployment_scope: "resourceGroup"
+environments:
+  - dev
+  - prod

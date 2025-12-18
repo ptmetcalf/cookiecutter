@@ -1,0 +1,72 @@
+# Bicep build artifacts
+*.json
+!*.bicepparam
+
+# Exclude compiled ARM templates (unless you want to track them)
+# Comment these out if you want to commit generated ARM templates
+**/compiled/*.json
+**/output/*.json
+
+# Azure CLI cache
+.azure/
+
+# What-if results
+whatif.txt
+whatif-*.txt
+
+# Deployment logs
+deployment-*.log
+
+# Local environment files (may contain secrets)
+.env
+.env.local
+*.local
+
+# Pre-commit cache
+.pre-commit-cache/
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+
+# Python virtual environments (for pre-commit)
+venv/
+.venv/
+env/
+.env/
+
+# PowerShell module cache (for PSRule)
+.psrule/
+
+# Node modules (if using any JS tooling)
+node_modules/
+
+# Backup files
+*.backup
+*.bak
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# Test output
+test-results/
+TestResults/
+
+# Azure deployment files (if generated)
+azuredeploy.json
+azuredeploy.parameters.json
+
+# Bicep cache
+.bicep/

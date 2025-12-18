@@ -1,0 +1,67 @@
+# Pre-commit hooks for OpenTofu/Terraform
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom YAML tags
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+
+  # OpenTofu/Terraform hooks
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.88.0
+    hooks:
+      - id: terraform_fmt
+        name: Format OpenTofu code
+        args:
+          - --args=-recursive
+
+      - id: terraform_validate
+        name: Validate OpenTofu code
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+
+      - id: terraform_docs
+        name: Generate Terraform docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+          - --args=--config=.terraform-docs.yml
+
+      - id: terraform_tfsec
+        name: Run tfsec security scan
+        args:
+          - --args=--soft-fail
+          - --args=--concise-output
+
+      - id: terraform_checkov
+        name: Run Checkov policy scan
+        args:
+          - --args=--quiet
+          - --args=--soft-fail
+
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint]
+
+  # Markdown linting
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.12.0
+    hooks:
+      - id: markdownlint
+        args: [--style, .markdownlint.yml]
