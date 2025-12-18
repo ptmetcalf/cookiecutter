@@ -40,11 +40,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: {{cookiecutter.github_actions_repo}}/.github/workflows/bicep-deploy.yml@{{cookiecutter.github_actions_ref}}
     with:
-      environment: ${{ inputs.environment }}
+      environment: {% raw %}${{ inputs.environment }}{% endraw %}
       bicep_file: infra/bicep/main.bicep
-      parameters_file: env/${{ inputs.environment }}.bicepparam
+      parameters_file: env/{% raw %}${{ inputs.environment }}{% endraw %}.bicepparam
       deployment_scope: resourceGroup
-      resource_group_name: ${{ inputs.environment == 'prod' && '{{cookiecutter.azure_resource_group_prod}}' || '{{cookiecutter.azure_resource_group_dev}}' }}
+      resource_group_name: {% raw %}${{ inputs.environment == 'prod' && {% endraw %}'{{cookiecutter.azure_resource_group_prod}}'{% raw %} || {% endraw %}'{{cookiecutter.azure_resource_group_dev}}'{% raw %} }}{% endraw %}
       bicep_version: {{cookiecutter.bicep_version}}
       confirm_what_if: true
     secrets: inherit

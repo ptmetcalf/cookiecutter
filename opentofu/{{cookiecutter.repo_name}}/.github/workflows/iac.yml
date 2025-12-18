@@ -39,9 +39,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: {{cookiecutter.github_actions_repo}}/.github/workflows/tofu-apply.yml@{{cookiecutter.github_actions_ref}}
     with:
-      environment: ${{ inputs.environment }}
+      environment: {% raw %}${{ inputs.environment }}{% endraw %}
       stack_dir: infra/stacks/{{cookiecutter.stack_name}}
-      var_file: env/${{ inputs.environment }}.tfvars
+      var_file: env/{% raw %}${{ inputs.environment }}{% endraw %}.tfvars
       tofu_version: {{cookiecutter.tofu_version}}
       require_plan_artifact: false
     secrets: inherit
