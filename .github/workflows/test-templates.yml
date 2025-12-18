@@ -99,20 +99,31 @@ jobs:
       - name: Install Cookiecutter
         run: pip install cookiecutter
 
-      - name: Create cookiecutter input file
+      - name: Prepare template with test values
         run: |
-          cd ${{ matrix.template.name }}
-          cat > test-input.json <<EOF
+          # Backup original cookiecutter.json
+          cp ${{ matrix.template.name }}/cookiecutter.json \
+             ${{ matrix.template.name }}/cookiecutter.json.bak
+
+          # Write test values to cookiecutter.json
+          cat > ${{ matrix.template.name }}/cookiecutter.json <<'EOF'
           ${{ toJson(matrix.template.test-values) }}
           EOF
-          cat test-input.json
+
+          echo "Using test values:"
+          cat ${{ matrix.template.name }}/cookiecutter.json
 
       - name: Generate repository from template
         run: |
           cookiecutter ${{ matrix.template.name }} \
             --no-input \
-            --config-file ${{ matrix.template.name }}/test-input.json \
             --output-dir test-output
+
+      - name: Restore original cookiecutter.json
+        if: always()
+        run: |
+          mv ${{ matrix.template.name }}/cookiecutter.json.bak \
+             ${{ matrix.template.name }}/cookiecutter.json
 
       - name: Verify generated repository structure
         run: |
@@ -250,9 +261,8 @@ jobs:
 
       - name: Generate OpenTofu repository
         run: |
+          # Use default values from cookiecutter.json
           cookiecutter opentofu --no-input \
-            repo_name=test-validation \
-            stack_name=testapp \
             --output-dir test-output
 
       - name: Setup OpenTofu
@@ -261,23 +271,23 @@ jobs:
           tofu_version: latest
 
       - name: Test OpenTofu init
-        working-directory: test-output/test-validation/infra/stacks/testapp
+        working-directory: test-output/my-iac-repo/infra/stacks/app
         run: |
           # Use local backend for testing
           tofu init -input=false
 
       - name: Test OpenTofu format
-        working-directory: test-output/test-validation/infra/stacks/testapp
+        working-directory: test-output/my-iac-repo/infra/stacks/app
         run: |
           tofu fmt -check -recursive
 
       - name: Test OpenTofu validate
-        working-directory: test-output/test-validation/infra/stacks/testapp
+        working-directory: test-output/my-iac-repo/infra/stacks/app
         run: |
           tofu validate
 
       - name: Test Makefile targets
-        working-directory: test-output/test-validation
+        working-directory: test-output/my-iac-repo
         run: |
           # Test that Makefile targets work
           make fmt || echo "⚠️  Makefile fmt target needs work"
@@ -301,9 +311,8 @@ jobs:
 
       - name: Generate Bicep repository
         run: |
+          # Use default values from cookiecutter.json
           cookiecutter bicep --no-input \
-            repo_name=test-bicep-validation \
-            stack_name=testapp \
             --output-dir test-output
 
       - name: Setup Azure CLI
@@ -316,17 +325,17 @@ jobs:
           az bicep version
 
       - name: Test Bicep build
-        working-directory: test-output/test-bicep-validation/infra/bicep
+        working-directory: test-output/my-bicep-repo/infra/bicep
         run: |
           az bicep build --file main.bicep
 
       - name: Test Bicep lint
-        working-directory: test-output/test-bicep-validation/infra/bicep
+        working-directory: test-output/my-bicep-repo/infra/bicep
         run: |
           az bicep lint --file main.bicep || echo "⚠️  Bicep has linting warnings"
 
       - name: Verify ARM template generated
-        working-directory: test-output/test-bicep-validation/infra/bicep
+        working-directory: test-output/my-bicep-repo/infra/bicep
         run: |
           if [ ! -f main.json ]; then
             echo "❌ ARM template not generated"
@@ -355,12 +364,21 @@ jobs:
 
       - name: Generate repository
         run: |
+          # Use default values from cookiecutter.json
           cookiecutter ${{ matrix.template }} --no-input \
-            repo_name=test-precommit-${{ matrix.template }} \
             --output-dir test-output
 
+      - name: Determine repository name
+        id: repo_name
+        run: |
+          if [ "${{ matrix.template }}" = "opentofu" ]; then
+            echo "name=my-iac-repo" >> $GITHUB_OUTPUT
+          else
+            echo "name=my-bicep-repo" >> $GITHUB_OUTPUT
+          fi
+
       - name: Validate pre-commit config
-        working-directory: test-output/test-precommit-${{ matrix.template }}
+        working-directory: test-output/${{ steps.repo_name.outputs.name }}
         run: |
           if [ ! -f .pre-commit-config.yaml ]; then
             echo "❌ .pre-commit-config.yaml not found"
@@ -373,7 +391,7 @@ jobs:
           echo "✅ pre-commit config is valid"
 
       - name: Test pre-commit installation
-        working-directory: test-output/test-precommit-${{ matrix.template }}
+        working-directory: test-output/${{ steps.repo_name.outputs.name }}
         run: |
           git init
           git config user.name "Test User"
@@ -402,14 +420,21 @@ jobs:
 
       - name: Generate repository
         run: |
+          # Use default values from cookiecutter.json
           cookiecutter ${{ matrix.template }} --no-input \
-            repo_name=test-workflow-${{ matrix.template }} \
-            github_actions_repo=test-org/github-actions \
-            github_actions_ref=v1.0.0 \
             --output-dir test-output
 
+      - name: Determine repository name
+        id: repo_name
+        run: |
+          if [ "${{ matrix.template }}" = "opentofu" ]; then
+            echo "name=my-iac-repo" >> $GITHUB_OUTPUT
+          else
+            echo "name=my-bicep-repo" >> $GITHUB_OUTPUT
+          fi
+
       - name: Validate generated workflow references
-        working-directory: test-output/test-workflow-${{ matrix.template }}
+        working-directory: test-output/${{ steps.repo_name.outputs.name }}
         run: |
           # Check that workflows reference the correct org/repo
           if ! grep -q "test-org/github-actions" .github/workflows/iac.yml; then
@@ -426,7 +451,7 @@ jobs:
           echo "✅ Generated workflows reference correct reusable workflows"
 
       - name: Check workflow uses correct template values
-        working-directory: test-output/test-workflow-${{ matrix.template }}
+        working-directory: test-output/${{ steps.repo_name.outputs.name }}
         run: |
           # Verify no hardcoded paths remain
           if grep -q "{{cookiecutter" .github/workflows/iac.yml; then
