@@ -17,32 +17,32 @@ sections:
   show: []
 
 content: |-
-  {{ .Header }}
+  {% raw %}{{ .Header }}{% endraw %}
 
   ## Usage
 
   ```hcl
-  {{ include "examples/basic/main.tf" }}
+  {% raw %}{{ include "examples/basic/main.tf" }}{% endraw %}
   ```
 
-  {{ .Requirements }}
+  {% raw %}{{ .Requirements }}{% endraw %}
 
-  {{ .Providers }}
+  {% raw %}{{ .Providers }}{% endraw %}
 
-  {{ .Modules }}
+  {% raw %}{{ .Modules }}{% endraw %}
 
-  {{ .Resources }}
+  {% raw %}{{ .Resources }}{% endraw %}
 
-  {{ .Inputs }}
+  {% raw %}{{ .Inputs }}{% endraw %}
 
-  {{ .Outputs }}
+  {% raw %}{{ .Outputs }}{% endraw %}
 
 output:
   file: "README.md"
   mode: inject
   template: |-
     <!-- BEGIN_TF_DOCS -->
-    {{ .Content }}
+    {% raw %}{{ .Content }}{% endraw %}
     <!-- END_TF_DOCS -->
 
 output-values:
